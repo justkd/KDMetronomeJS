@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang='en'>
+
+<head>
+    <meta charset='utf-8'>
+    <title></title>
+    <meta name='description' content=''>
+    <meta name='author' content=''>
+
+    <style>
+        body {
+            font-family: Roboto Condensed, Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif;
+        }
+
+        #toggle {
+            border: none;
+            height: 80px;
+            width: 80px;
+            margin: 10px;
+            font-size: 1em;
+            color: #fff;
+            background-color: #000;
+            box-shadow: 0 2px 7px 0 rgba(0, 0, 0, .5);
+            border-radius: 10px;
+            outline: none;
+        }
+
+        #toggle:active {
+            margin: 12px;
+            width: 76px;
+            height: 76px;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <button id='toggle'>toggle</button>
+
+    Click the toggle to display the metronome UI. The widget is also draggable.
+
+    <script src='KDMetronome.js' type='text/javascript'></script>
+    <script>
+        // The widget is generated on the fly. Simply pass a DOM ID for whichever element should toggle the widget display.
+        const metronome = new KDMetronome('toggle')
+
+
+        /*
+        // The KDMetronome API is available when more customization is desired.
+        // Headless mode disposes of the default UI.
+        metronome.headless()
+        metronome.setBPM(180)
+        metronome.setFrequency(400)
+        metronome.setVolume(80)
+        document.getElementById("toggle").addEventListener("click", e => {
+            metronome.isOn() ? metronome.stop() : metronome.start()
+        })
+        */
+    </script>
+
+</body>
+
+</html>
