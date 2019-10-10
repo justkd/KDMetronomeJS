@@ -31,11 +31,23 @@ const metronome = new KDMetronome({
 })
 document.getElementById('toggle').addEventListener("click", e => metronome.running() ? metronome.stop() : metronome.start())
 
-// metronome.bpm(96)
-// metronome.frequency(240)
-// metronome.volume(60)
-// metronome.start()
-// metronome.stop()
+// metronome.bpm(96)                                    // Set the BPM (6 - 300)
+// metronome.frequency(240)                             // Set the click frequency (20 - 20500)
+// metronome.volume(60)                                 // Set the click volume (0 - 100)
+// metronome.start()                                    // Start the metronome.
+// metronome.stop()                                     // Stop the metronome.
+
+// metronome.callback(_ => console.log('click'))        // Pass a function to set the callback that runs on metronome tick.
+// metronome.callback('default')                        // Pass 'default' to reset the callback to the default function.
+
+// metronome.bpm()                                      // Returns the current BPM.
+// metronome.frequency()                                // Returns the current frequency.
+// metronome.volume()                                   // Returns the current volume.
+// metronome.hide()                                     // Hide the UI widget. Only when not in headless mode.
+// metronome.show()                                     // Show the UI widget. Only when not in headless mode.
+// metronome.hidden()                                   // Returns true/false.
+// metronome.running()                                  // Returns true/false.
+// metronome.headless()                                 // Returns true/false.
 ```
 
 Tested in Chrome, Safari, and FireFox. Made with ToneJS, NexusUI, WAAClock, and AnimateCSS. Dependencies are loaded dynamically.
