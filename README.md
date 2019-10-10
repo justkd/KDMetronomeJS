@@ -19,17 +19,19 @@ KDMetronome is a single class that generates the widget UI and controls all func
 
 You can pass a DOM ID to set the interactive element that will show/hide the default UI on click, or run it in headless mode and use the API.  
 
-The default widget is draggable, can run while hidden, and the number inputs can be changed by clicking and typing or dragging up/down.
+The default widget is draggable, can run while hidden, and the number inputs can be changed by clicking/typing or dragging up/down. You can also set a custom callback.
+
+Multple metronomes can be created and controlled independently.
 
 ```
 // Headless mode disposes of the default UI. Make sure your sound is on!
-const metronome = new KDMetronome({
+const metronome2 = new KDMetronome({
     headless: true,
     bpm: 180,
     frequency: 400,
     volume: 80,
 })
-document.getElementById('toggle').addEventListener("click", e => metronome.running() ? metronome.stop() : metronome.start())
+document.getElementById('toggle').addEventListener("click", e => metronome2.running() ? metronome2.stop() : metronome2.start())
 
 // metronome.bpm(96)                                    // Set the BPM (6 - 300)
 // metronome.frequency(240)                             // Set the click frequency (20 - 20500)
