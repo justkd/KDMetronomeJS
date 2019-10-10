@@ -15,11 +15,11 @@ const metronome = new KDMetronome('toggleID')
 Example:  
 [KDMetronome on CodePen](https://codepen.io/justKD/pen/MWWYQBr)
 
-KDMetronome is a single class that generates the widget and controls all functionality. Dependencies are loaded dynamically. 
+KDMetronome is a single class that generates the widget UI and controls all functionality. 
 
 You can pass a DOM ID to set the interactive element that will show/hide the default UI on click, or run it in headless mode and use the API.  
 
-Tested in Chrome, Safari, and FireFox. Made with ToneJS, NexusUI, WAAClock, and AnimateCSS.
+The default widget is draggable, can run while hidden, and the number inputs can be changed by clicking and typing or dragging up/down.
 
 ```
 // Headless mode disposes of the default UI. Make sure your sound is on!
@@ -37,3 +37,5 @@ document.getElementById('toggle').addEventListener("click", e => metronome.runni
 // metronome.start()
 // metronome.stop()
 ```
+
+Tested in Chrome, Safari, and FireFox. Made with ToneJS, NexusUI, WAAClock, and AnimateCSS. Dependencies are loaded dynamically.
