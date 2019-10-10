@@ -17,7 +17,7 @@ Example:
 
 KDMetronome is a single class that generates the widget and controls all functionality. Dependencies are loaded dynamically. 
 
-You can pass a DOM ID to set the interactive element that will show/hide the default UI, or run it in headless mode and use the API.  
+You can pass a DOM ID to set the interactive element that will show/hide the default UI on click, or run it in headless mode and use the API.  
 
 Tested in Chrome, Safari, and FireFox. Made with ToneJS, NexusUI, WAAClock, and AnimateCSS.
 
