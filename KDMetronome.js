@@ -1,6 +1,8 @@
 class KDMetronome {
     constructor(toggleID, bpm) {
 
+        // PUBLIC PROPERTIES
+
         this.props = {
             scriptTags: {
                 tone: 'kdmetronome--tonejs--script',
@@ -16,7 +18,7 @@ class KDMetronome {
             },
 
             domIDs: {
-                toggle: toggleID,
+                toggle: typeof toggleID === 'object' ? null : toggleID,
                 container: 'kdmetronome--outer', // outer metronome container div that will be animated on and off screen
                 inner: 'kdmetronome--inner', // inner container that will actually hold UI elements
                 startButton: 'kdmetronome--startbutton',
@@ -67,24 +69,36 @@ class KDMetronome {
             bpm: bpm ? bpm : this.props.defaults.bpm,
             volume: this.props.defaults.volume,
             frequency: this.props.defaults.frequency,
+            headless: false,
         }
 
-        this.controllers = {
+        // PRIVATE PROPERTIES
+
+        const _controllers = {
             context: null,
             clock: null,
             event: null,
         }
 
-        this.views = {
+        const _views = {
             synth: null,
             bpm: null,
             volume: null,
         }
 
-        this.createMetronome = _ => {
+        // PRIVATE METHODS
+
+        const _callback = _ => {
+            _views.synth.triggerAttackRelease(this.state.frequency, '8n')
+
+            const startButton = document.getElementById(this.props.domIDs.startButton)
+            if (startButton) startButton.style.opacity < 1 ? startButton.style.opacity = 1 : startButton.style.opacity = 0.7
+        }
+
+        const _createMetronome = _ => {
 
             const createSynth = (_ => {
-                this.views.synth = new Tone.Synth({
+                _views.synth = new Tone.Synth({
                     oscillator: {
                         type: 'sine',
                         modulationFrequency: 0.4
@@ -97,14 +111,14 @@ class KDMetronome {
                     },
                 }).toDestination()
 
-                this.views.synth.volume.value = Tone.gainToDb(this.state.volume / 100)
+                _views.synth.volume.value = Tone.gainToDb(this.state.volume / 100)
             })()
 
             const createBpmWidget = (_ => {
                 if (document.getElementById(this.props.domIDs.container)) {
                     const widget = '#' + this.props.domIDs.bpmWidget
 
-                    this.views.bpmWidget = new Nexus.Number(widget, {
+                    _views.bpmWidget = new Nexus.Number(widget, {
                         'size': [60, 30],
                         'value': this.state.bpm,
                         'min': this.props.bounds.bpm.min,
@@ -112,8 +126,8 @@ class KDMetronome {
                         'step': 1
                     })
 
-                    this.views.bpmWidget.on('change', value => {
-                        this.setBPM(value)
+                    _views.bpmWidget.on('change', value => {
+                        this.bpm(value)
                     })
 
                     // /* center text, update font */
@@ -130,7 +144,7 @@ class KDMetronome {
                 if (document.getElementById(this.props.domIDs.container)) {
                     const widget = '#' + this.props.domIDs.volWidget
 
-                    this.views.volumeWidget = new Nexus.Number(widget, {
+                    _views.volumeWidget = new Nexus.Number(widget, {
                         'size': [60, 30],
                         'value': this.state.volume,
                         'min': this.props.bounds.volume.min,
@@ -138,8 +152,8 @@ class KDMetronome {
                         'step': 1
                     })
 
-                    this.views.volumeWidget.on('change', value => {
-                        this.views.synth.volume.value = Tone.gainToDb(value / 100)
+                    _views.volumeWidget.on('change', value => {
+                        _views.synth.volume.value = Tone.gainToDb(value / 100)
                         this.state.volume = value
                     })
 
@@ -154,19 +168,19 @@ class KDMetronome {
             })()
 
             if (document.getElementById(this.props.domIDs.container)) {
-                document.getElementById(this.props.domIDs.container).style.display = 'none' // prepare container for this.isHidden() check
+                document.getElementById(this.props.domIDs.container).style.display = 'none' // prepare container for this.hidden() check
                 document.getElementById(this.props.domIDs.startButton).style.opacity = 1 // prepare start button for opacity check
                 /* Bind show/hide to the provided toggle element if available. */
-                if (this.props.domIDs.toggle) document.getElementById(this.props.domIDs.toggle).addEventListener("click", e => this.isHidden() ? this.show() : this.hide())
+                if (this.props.domIDs.toggle) document.getElementById(this.props.domIDs.toggle).addEventListener("click", e => this.hidden() ? this.show() : this.hide())
                 /* Bind start button action */
-                document.getElementById(this.props.domIDs.startButton).addEventListener("click", e => this.controllers.event ? this.stop() : this.start())
+                document.getElementById(this.props.domIDs.startButton).addEventListener("click", e => _controllers.event ? this.stop() : this.start())
                 /* make the container draggable */
-                this.draggable(document.getElementById(this.props.domIDs.container))
+                _draggable(document.getElementById(this.props.domIDs.container))
             }
 
         }
 
-        const load = (_ => {
+        const _load = (_ => {
 
             const createCSS = (_ => {
 
@@ -223,7 +237,7 @@ class KDMetronome {
                 if (this.state.toneLoaded && this.state.nexusLoaded) {
                     if (!this.state.ready) {
                         this.state.ready = true
-                        this.createMetronome()
+                        _createMetronome()
                     }
                 } else {
                     let timeoutCounter = 0
@@ -276,172 +290,197 @@ class KDMetronome {
             document.getElementById(this.props.scriptTags.tone) ? checkTone() : loadToneJS()
             document.getElementById(this.props.scriptTags.nexus) ? checkNexus() : loadNexusUI()
 
+            if (typeof toggleID === 'object') this.setOptions(toggleID)
         })()
 
-    }
+        const _draggable = element => {
+            const pos = [0, 0, 0, 0]
+            const self = this
 
-    start() {
-        if (this.controllers.event) this.stop()
+            const closeDragElement = _ => {
+                document.onmouseup = null
+                document.onmousemove = null
+            }
 
-        this.controllers.context = window.webkitAudioContext ? new webkitAudioContext() : new AudioContext()
+            const elementDrag = e => {
+                e = e || window.event
+                e.preventDefault()
 
-        this.controllers.clock = new WAAClock(this.controllers.context)
-        this.controllers.clock.start()
+                const calcPosition = (_ => {
+                    pos[0] = pos[2] - e.clientX
+                    pos[1] = pos[3] - e.clientY * 2
+                    pos[2] = e.clientX
+                    pos[3] = e.clientY * 2
+                })()
 
-        const startButton = document.getElementById(this.props.domIDs.startButton)
-        if (startButton) {
-            startButton.style.backgroundColor = this.props.styles.green
-            startButton.innerHTML = 'on'
-            startButton.classList.add('noTransition') // make sure visual metronome ticks arent affected by animation transition durations
+                const setPosition = (_ => {
+                    const width = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth
+                    const height = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight
+                    const inner = document.getElementById(self.props.domIDs.inner)
+
+                    // find absolute position
+                    let top = (element.offsetTop - pos[1])
+                    let left = (element.offsetLeft - pos[0])
+
+                    // restrict to window bounds    
+                    top = Math.min(Math.max(top, -height + inner.clientHeight), height)
+                    left = Math.min(Math.max(left, 0), width - inner.clientWidth)
+
+                    element.style.top = top + "px"
+                    element.style.left = left + "px"
+                })()
+            }
+
+            const dragMouseDown = e => {
+                e = e || window.event
+                e.preventDefault()
+
+                const getPosition = (_ => {
+                    pos[2] = e.clientX
+                    pos[3] = e.clientY * 2
+                })()
+
+                const handleMouseEvents = (_ => {
+                    document.onmouseup = closeDragElement
+                    document.onmousemove = elementDrag
+                })()
+            }
+
+            element.onmousedown = dragMouseDown
         }
 
-        const seconds = 60 / this.state.bpm
-        this.controllers.event = this.controllers.clock.callbackAtTime(_ => this.callback(), seconds).repeat(seconds)
+        /** `animate.css` helper */
+        const _animateCSS = (element, animationName, callback) => {
+            const node = document.querySelector('#' + element)
+            node.classList.add('animated', animationName)
 
-        this.views.synth.volume.value = Tone.gainToDb(this.state.volume / 100)
-        this.views.synth.triggerAttackRelease(this.state.frequency, '8n')
-    }
+            const handleAnimationEnd = _ => {
+                node.classList.remove('animated', animationName)
+                node.removeEventListener('animationend', handleAnimationEnd)
+                if (typeof callback === 'function') callback()
+            }
 
-    stop() {
-        this.controllers.clock.stop()
-        this.controllers.event.clear()
-        this.controllers.context.close()
-        this.controllers.event = null
-        this.controllers.clock = null
-        this.controllers.context = null
-
-
-        const startButton = document.getElementById(this.props.domIDs.startButton)
-        if (startButton) {
-            startButton.classList.remove('noTransition') // ensure normal button interactions are affected by animation transitions
-            startButton.style.backgroundColor = this.props.styles.black
-            startButton.style.opacity = 1
-            startButton.innerHTML = 'off'
-        }
-    }
-
-    callback() {
-        this.views.synth.triggerAttackRelease(this.state.frequency, '8n')
-
-        const startButton = document.getElementById(this.props.domIDs.startButton)
-        if (startButton) startButton.style.opacity < 1 ? startButton.style.opacity = 1 : startButton.style.opacity = 0.7
-    }
-
-    hide() {
-        if (document.getElementById(this.props.domIDs.container)) {
-            this.animateCSS(this.props.domIDs.container, 'bounceOutLeft', _ => document.getElementById(this.props.domIDs.container).style.display = 'none')
-        } else {
-            console.log('headless mode')
-        }
-    }
-
-    show() {
-        if (document.getElementById(this.props.domIDs.container)) {
-            document.getElementById(this.props.domIDs.container).style.display = 'flex'
-            this.animateCSS(this.props.domIDs.container, 'bounceInLeft')
-        } else {
-            console.log('headless mode')
-        }
-    }
-
-    isOn() {
-        return this.controllers.event ? true : false
-    }
-
-    setBPM(bpm) {
-        if (this.isOn()) this.stop()
-        this.state.bpm = bpm
-    }
-
-    setVolume(volume) {
-        // only set the state property here
-        this.state.volume = volume
-        // actual `synth` volume is set in `start()` to avoid errors if calling `setVolume()` before `synth` is instantiated
-    }
-
-    setFrequency(hz) {
-        this.state.frequency = hz
-    }
-
-    isHidden() {
-        const elem = document.getElementById(this.props.domIDs.container)
-        let hidden = 'undefined'
-        if (elem) elem.style.display == 'none' ? hidden = true : hidden = false
-        return hidden
-    }
-
-    headless() {
-        const elem = document.getElementById(this.props.domIDs.container)
-        if (elem) elem.parentNode.removeChild(elem)
-    }
-
-    /** `animate.css` helper */
-    animateCSS(element, animationName, callback) {
-        const node = document.querySelector('#' + element)
-        node.classList.add('animated', animationName)
-
-        const handleAnimationEnd = _ => {
-            node.classList.remove('animated', animationName)
-            node.removeEventListener('animationend', handleAnimationEnd)
-            if (typeof callback === 'function') callback()
+            node.addEventListener('animationend', handleAnimationEnd)
         }
 
-        node.addEventListener('animationend', handleAnimationEnd)
-    }
+        // PUBLIC METHODS
 
-    draggable(element) {
-        const pos = [0, 0, 0, 0]
-        const self = this
-        element.onmousedown = dragMouseDown
-
-        function dragMouseDown(e) {
-            e = e || window.event
-            e.preventDefault()
-
-            const getPosition = (_ => {
-                pos[2] = e.clientX
-                pos[3] = e.clientY * 2
-            })()
-
-            const handleMouseEvents = (_ => {
-                document.onmouseup = closeDragElement
-                document.onmousemove = elementDrag
-            })()
+        const _setOptions = options => {
+            if (options.headless) this.state.headless = options.headless
+            if (options.toggleID) this.props.domIDs.toggle = options.toggleID
+            if (options.bpm) this.state.bpm = options.bpm
+            if (options.volume) this.state.volume = options.volume
+            if (options.frequency) this.state.frequency = options.frequency
         }
 
-        function elementDrag(e) {
-            e = e || window.event
-            e.preventDefault()
+        const _start = _ => {
+            if (_controllers.event) this.stop()
 
-            const calcPosition = (_ => {
-                pos[0] = pos[2] - e.clientX
-                pos[1] = pos[3] - e.clientY * 2
-                pos[2] = e.clientX
-                pos[3] = e.clientY * 2
-            })()
+            _controllers.context = window.webkitAudioContext ? new webkitAudioContext() : new AudioContext()
 
-            const setPosition = (_ => {
-                const width = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth
-                const height = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight
-                const inner = document.getElementById(self.props.domIDs.inner)
+            _controllers.clock = new WAAClock(_controllers.context)
+            _controllers.clock.start()
 
-                // find absolute position
-                let top = (element.offsetTop - pos[1])
-                let left = (element.offsetLeft - pos[0])
+            const startButton = document.getElementById(this.props.domIDs.startButton)
+            if (startButton) {
+                startButton.style.backgroundColor = this.props.styles.green
+                startButton.innerHTML = 'on'
+                startButton.classList.add('noTransition') // make sure visual metronome ticks arent affected by animation transition durations
+            }
 
-                // restrict to window bounds    
-                top = Math.min(Math.max(top, -height + inner.clientHeight), height)
-                left = Math.min(Math.max(left, 0), width - inner.clientWidth)
+            const seconds = 60 / this.state.bpm
+            _controllers.event = _controllers.clock.callbackAtTime(_ => _callback(), seconds).repeat(seconds)
 
-                element.style.top = top + "px"
-                element.style.left = left + "px"
-            })()
+            _views.synth.volume.value = Tone.gainToDb(this.state.volume / 100)
+            _views.synth.triggerAttackRelease(this.state.frequency, '8n')
         }
 
-        function closeDragElement() {
-            document.onmouseup = null
-            document.onmousemove = null
+        const _stop = _ => {
+            _controllers.clock.stop()
+            _controllers.event.clear()
+            _controllers.context.close()
+            _controllers.event = null
+            _controllers.clock = null
+            _controllers.context = null
+
+
+            const startButton = document.getElementById(this.props.domIDs.startButton)
+            if (startButton) {
+                startButton.classList.remove('noTransition') // ensure normal button interactions are affected by animation transitions
+                startButton.style.backgroundColor = this.props.styles.black
+                startButton.style.opacity = 1
+                startButton.innerHTML = 'off'
+            }
         }
+
+        const _hide = _ => {
+            if (document.getElementById(this.props.domIDs.container)) {
+                _animateCSS(this.props.domIDs.container, 'bounceOutLeft', _ => document.getElementById(this.props.domIDs.container).style.display = 'none')
+            } else {
+                console.log('headless mode')
+            }
+        }
+
+        const _show = _ => {
+            if (document.getElementById(this.props.domIDs.container)) {
+                document.getElementById(this.props.domIDs.container).style.display = 'flex'
+                _animateCSS(this.props.domIDs.container, 'bounceInLeft')
+            } else {
+                console.log('headless mode')
+            }
+        }
+
+        const _running = _ => {
+            return _controllers.event ? true : false
+        }
+
+        const _bpm = bpm => {
+            if (bpm) {
+                if (this.running()) this.stop()
+                this.state.bpm = bpm
+            }
+            return this.state.bpm
+        }
+
+        const _volume = volume => {
+            if (volume) this.state.volume = volume
+            return this.state.volume
+        }
+
+        const _frequency = hz => {
+            if (hz) this.state.frequency = hz
+            return this.state.frequency
+        }
+
+        const _hidden = _ => {
+            const elem = document.getElementById(this.props.domIDs.container)
+            let hidden = 'undefined'
+            if (elem) elem.style.display == 'none' ? hidden = true : hidden = false
+            return hidden
+        }
+
+        const _headless = headless => {
+            if (typeof headless === 'boolean') {
+                this.state.headless = headless
+                const elem = document.getElementById(this.props.domIDs.container)
+                if (elem) elem.parentNode.removeChild(elem)
+            }
+            return this.state.headless
+        }
+
+        // API
+
+        this.setOptions = options => _setOptions(options)
+        this.start = _ => _start()
+        this.stop = _ => _stop()
+        this.hide = _ => _hide()
+        this.show = _ => _show()
+        this.running = _ => _running()
+        this.bpm = bpm => _bpm(bpm)
+        this.volume = volume => _volume(volume)
+        this.frequency = hz => _frequency(hz)
+        this.hidden = _ => _hidden()
+        this.headless = headless => _headless(headless)
     }
 
 }
