@@ -47,9 +47,15 @@ document.getElementById('toggle').addEventListener("click", e => metronome2.runn
 // metronome.volume()                                   // Returns the current volume.
 // metronome.hide()                                     // Hide the UI widget. Only when not in headless mode.
 // metronome.show()                                     // Show the UI widget. Only when not in headless mode.
-// metronome.hidden()                                   // Returns true/false.
-// metronome.running()                                  // Returns true/false.
-// metronome.headless()                                 // Returns true/false.
+
+// metronome.hidden()                                   // Returns true/false. Read-only.
+// metronome.running()                                  // Returns true/false. Read-only.
+// metronome.headless()                                 // Returns true/false. Read-only.
+// metronome.state()                                    // Returns an object containing instance state values.  Read-only.
+// metronome.props()                                    // Returns an object containing instance properties.  Read-only.
+// metronome.controllers()                              // Returns an object containing instance controllers.  Read-only.
+// metronome.views()                                    // Returns an object containing instance views.  Read-only.
+// metronome.uuid()                                     // Returns the instance's unique identifier. Read-only.
 ```
 
 Tested in Chrome, Safari, and FireFox. Made with ToneJS, NexusUI, WAAClock, and AnimateCSS. Dependencies are loaded dynamically.
