@@ -10,6 +10,8 @@ https://cdn.notnatural.co/KDMetronome.min.js
 const metronome = new KDMetronome('toggleID')
 ```
 
+![](https://raw.githubusercontent.com/justKD/KDMetronomeJS/master/readme-screenshot.png)
+
 Example:  
 [KDMetronome on CodePen](https://codepen.io/justKD/pen/MWWYQBr)
 
