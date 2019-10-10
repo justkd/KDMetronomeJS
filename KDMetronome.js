@@ -40,7 +40,7 @@ class KDMetronome {
                     max: 300,
                 },
                 volume: {
-                    min: 1,
+                    min: 0,
                     max: 100,
                 },
             },
@@ -87,12 +87,19 @@ class KDMetronome {
         }
 
         // PRIVATE METHODS
-
-        const _callback = _ => {
+        const _defaultCallback = _ => {
             _views.synth.triggerAttackRelease(this.state.frequency, '8n')
 
             const startButton = document.getElementById(this.props.domIDs.startButton)
             if (startButton) startButton.style.opacity < 1 ? startButton.style.opacity = 1 : startButton.style.opacity = 0.7
+        }
+
+        const _setCallback = callback => {
+            if (typeof callback === 'function') {
+                _callback = callback
+            } else if (callback === 'default') {
+                _callback = _ => _defaultCallback()
+            }
         }
 
         const _createMetronome = _ => {
@@ -365,6 +372,8 @@ class KDMetronome {
 
         // PUBLIC METHODS
 
+        let _callback = _ => _defaultCallback()
+
         const _setOptions = options => {
             if (options.headless) this.state.headless = options.headless
             if (options.toggleID) this.props.domIDs.toggle = options.toggleID
@@ -392,7 +401,7 @@ class KDMetronome {
             _controllers.event = _controllers.clock.callbackAtTime(_ => _callback(), seconds).repeat(seconds)
 
             _views.synth.volume.value = Tone.gainToDb(this.state.volume / 100)
-            _views.synth.triggerAttackRelease(this.state.frequency, '8n')
+            _callback()
         }
 
         const _stop = _ => {
@@ -470,6 +479,7 @@ class KDMetronome {
 
         // API
 
+        this.callback = callback => _setCallback(callback)
         this.setOptions = options => _setOptions(options)
         this.start = _ => _start()
         this.stop = _ => _stop()
