@@ -36,7 +36,7 @@ document.getElementById('toggle').addEventListener("click", e => metronome2.runn
 // metronome.bpm(96)                                    // Set the BPM (6 - 300)
 // metronome.frequency(240)                             // Set the click frequency (20 - 20500)
 // metronome.volume(60)                                 // Set the click volume (0 - 100)
-// metronome.start()                                    // Start the metronome.
+// metronome.start()                                    // Start the metronome. Web Audio must first be initiated by a user action.
 // metronome.stop()                                     // Stop the metronome.
 
 // metronome.callback(_ => console.log('click'))        // Pass a function to set the callback that runs on metronome tick.
@@ -47,7 +47,7 @@ document.getElementById('toggle').addEventListener("click", e => metronome2.runn
 // metronome.volume()                                   // Returns the current volume.
 // metronome.hide()                                     // Hide the UI widget. Only when not in headless mode.
 // metronome.show()                                     // Show the UI widget. Only when not in headless mode.
-// metronome.triggerSynth()                             // Manually triggers a synth click. Useful when adding custom callbacks.
+// metronome.triggerSynth()                             // Manually trigger the synth. Web Audio must first be initiated by a user action.
 
 // metronome.hidden()                                   // Returns true/false. Read-only.
 // metronome.running()                                  // Returns true/false. Read-only.
