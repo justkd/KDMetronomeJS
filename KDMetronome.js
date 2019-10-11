@@ -53,17 +53,15 @@ const _KDMetronomeInit = {
     },
 
     readyCheck: _ => {
-        if (_KDMetronomeInit.state.toneLoaded && _KDMetronomeInit.state.nexusLoaded) {
+        if (_KDMetronomeInit.state.toneLoaded && _KDMetronomeInit.state.nexusLoaded)
             if (!_KDMetronomeInit.state.ready) _KDMetronomeInit.state.ready = true
-        } else {
+        else {
             let timeoutCounter = 0
             setTimeout(() => {
                 if (timeoutCounter < 2000) {
                     timeoutCounter++
                     _KDMetronomeInit.readyCheck()
-                } else {
-                    console.log('Unable to load KDMetronome dependencies.')
-                }
+                } else console.log('Unable to load KDMetronome dependencies.')
             }, 100)
         }
     },
@@ -113,9 +111,8 @@ const _KDMetronomeInit = {
 Object.freeze(_KDMetronomeInit)
 _KDMetronomeInit.init()
 
-
 class KDMetronome {
-    constructor(toggleID, bpm) {
+    constructor(toggleID) {
 
         // UTILITY
 
@@ -150,6 +147,8 @@ class KDMetronome {
                 node.addEventListener('animationend', handleAnimationEnd)
             },
 
+            clip: (value, min, max) => Math.min(Math.max(min, value), max),
+
             makeDraggable: element => {
                 const pos = [0, 0, 0, 0]
 
@@ -179,8 +178,8 @@ class KDMetronome {
                         let left = (element.offsetLeft - pos[0])
 
                         // restrict to window bounds    
-                        top = Math.min(Math.max(top, -height + inner.clientHeight), height)
-                        left = Math.min(Math.max(left, 0), width - inner.clientWidth)
+                        top = _utility.clip(top, -height + inner.clientHeight, height)
+                        left = _utility.clip(left, 0, width - inner.clientWidth)
 
                         element.style.top = top + "px"
                         element.style.left = left + "px"
@@ -231,6 +230,10 @@ class KDMetronome {
                     min: 0,
                     max: 100,
                 },
+                hz: {
+                    min: 20,
+                    max: 20500,
+                },
             },
 
             defaults: {
@@ -258,7 +261,7 @@ class KDMetronome {
 
         const _state = {
             ready: false,
-            bpm: bpm ? bpm : _props.defaults.bpm,
+            bpm: _props.defaults.bpm,
             volume: _props.defaults.volume,
             frequency: _props.defaults.frequency,
             headless: false,
@@ -284,19 +287,16 @@ class KDMetronome {
         let _public = {
 
             callback: callback => {
-                if (typeof callback === 'function') {
-                    _props.callback = callback
-                } else if (callback === 'default') {
-                    _props.callback = _ => _props.defaults.callback()
-                }
+                if (typeof callback === 'function') _props.callback = callback
+                else if (callback === 'default') _props.callback = _ => _props.defaults.callback()
             },
 
             setOptions: options => {
-                if (options.headless) this.headless(options.headless)
                 if (options.toggleID) _props.domIDs.toggle = options.toggleID
-                if (options.bpm) _state.bpm = options.bpm
-                if (options.volume) _state.volume = options.volume
-                if (options.frequency) _state.frequency = options.frequency
+                if (options.headless) this.headless(options.headless)
+                if (options.bpm) this.bpm(options.bpm)
+                if (options.volume) this.volume(options.volume)
+                if (options.frequency) this.frequency(options.frequency)
             },
 
             start: _ => {
@@ -320,7 +320,7 @@ class KDMetronome {
                 }
 
                 const seconds = 60 / _state.bpm
-                _controllers.event = _controllers.clock.callbackAtTime(_ => onTick(), seconds).repeat(seconds)
+                _controllers.event = _controllers.clock.callbackAtTime(onTick, seconds).repeat(seconds)
             },
 
             stop: _ => {
@@ -342,44 +342,33 @@ class KDMetronome {
             },
 
             hide: _ => {
-                if (document.getElementById(_props.domIDs.container)) {
-                    _utility.animateCSS(_props.domIDs.container, 'bounceOutLeft', _ => document.getElementById(_props.domIDs.container).style.display = 'none')
-                } else {
-                    console.log('unable to hide: headless mode')
-                }
+                const elem = document.getElementById(_props.domIDs.container)
+                if (elem) _utility.animateCSS(_props.domIDs.container, 'bounceOutLeft', _ => elem.style.display = 'none')
+                else console.log('N/A: headless mode')
             },
 
             show: _ => {
-                if (document.getElementById(_props.domIDs.container)) {
-                    document.getElementById(_props.domIDs.container).style.display = 'flex'
+                const elem = document.getElementById(_props.domIDs.container)
+                if (elem) {
+                    elem.style.display = 'flex'
                     _utility.animateCSS(_props.domIDs.container, 'bounceInLeft')
-                } else {
-                    console.log('unable to show: headless mode')
-                }
+                } else console.log('N/A: headless mode')
             },
 
             running: _ => _controllers.event ? true : false,
 
             bpm: bpm => {
-                if (bpm) {
-                    if (this.running()) this.stop()
-                    _state.bpm = bpm
-                }
+                if (typeof bpm === 'number' && _state.bpm != bpm) _views.bpmWidget.value = _utility.clip(bpm, _props.bounds.bpm.min, _props.bounds.bpm.max)
                 return _state.bpm
             },
 
             volume: volume => {
-                if (volume) {
-                    if (_state.volume != volume) {
-                        _state.volume = volume
-                        _views.synth.volume.value = Tone.gainToDb((_state.volume * _props.defaults.volumeScale) / 100)
-                    }
-                }
+                if (typeof volume === 'number' && _state.volume != volume) _views.volumeWidget.value = _utility.clip(volume, _props.bounds.volume.min, _props.bounds.volume.max)
                 return _state.volume
             },
 
             frequency: hz => {
-                if (hz) _state.frequency = hz
+                if (typeof hz === 'number') _state.frequency = _utility.clip(hz, _props.bounds.hz.min, _props.bounds.hz.max)
                 return _state.frequency
             },
 
@@ -413,16 +402,15 @@ class KDMetronome {
 
             ready: callback => {
                 if (typeof callback === 'function') {
-                    if (_state.ready) {
-                        callback()
-                    } else {
+                    if (_state.ready) callback()
+                    else {
                         let timeoutCounter = 0
                         setTimeout(_ => {
                             if (timeoutCounter < 2000) {
                                 timeoutCounter++
                                 this.ready(callback)
                             } else {
-                                console.log('unable to create metronome')
+                                console.log('Unable to create metronome.')
                             }
                         }, 100)
                     }
@@ -447,7 +435,7 @@ class KDMetronome {
                             timeoutCounter++
                             _private.readyCheck()
                         } else {
-                            console.log('unable to create metronome')
+                            console.log('Unable to create metronome.')
                         }
                     }, 100)
                 }
@@ -489,7 +477,10 @@ class KDMetronome {
                             'step': 1
                         })
 
-                        _views.bpmWidget.on('change', value => this.bpm(value))
+                        _views.bpmWidget.on('change', value => {
+                            if (this.running()) this.stop()
+                            if (_state.bpm != value) _state.bpm = value
+                        })
 
                         // /* center text, update font */
                         Object.values(document.getElementById(_props.domIDs.bpmWidget).children).forEach(child => {
@@ -513,7 +504,12 @@ class KDMetronome {
                             'step': 1
                         })
 
-                        _views.volumeWidget.on('change', value => this.volume(value))
+                        _views.volumeWidget.on('change', value => {
+                            if (_state.volume != value) {
+                                _state.volume = value
+                                _views.synth.volume.value = Tone.gainToDb((_state.volume * _props.defaults.volumeScale) / 100)
+                            }
+                        })
 
                         // /* center text, update font */
                         Object.values(document.getElementById(_props.domIDs.volWidget).children).forEach(child => {
@@ -524,6 +520,8 @@ class KDMetronome {
                         })
                     }
                 })()
+
+                if (typeof toggleID === 'object') this.setOptions(toggleID)
 
                 if (document.getElementById(_props.domIDs.container)) {
                     document.getElementById(_props.domIDs.container).style.display = 'none' // prepare container for this.hidden() check
@@ -543,40 +541,39 @@ class KDMetronome {
                 _public = null
             },
 
+            load: _ => {
+
+                const createDomElements = (_ => {
+
+                    const createOuterContainer = (_ => {
+                        const div = document.createElement("div");
+                        div.id = _props.domIDs.container
+                        document.body.appendChild(div)
+                    })()
+
+                    const createInnerContainer = (_ => {
+                        const container = document.getElementById(_props.domIDs.container)
+                        container.classList.add(_KDMetronomeInit.cssClassNames.outerContainer)
+                        container.innerHTML = "<div id='" + _props.domIDs.inner + "'></div>"
+                    })()
+
+                    const createUIElements = (_ => {
+                        const inner = document.getElementById(_props.domIDs.inner)
+                        inner.classList.add(_KDMetronomeInit.cssClassNames.innerContainer)
+                        inner.innerHTML =
+                            "<button id='" + _props.domIDs.startButton + "' class='" + _KDMetronomeInit.cssClassNames.startButton + "' type='button'>off</button>" +
+                            "<div class='" + _KDMetronomeInit.cssClassNames.bpmWidgetOuter + "'><div id='" + _props.domIDs.bpmWidget + "'></div><div class='" + _KDMetronomeInit.cssClassNames.widgetTextLabel + "'>bpm</div></div>" +
+                            "<div class='" + _KDMetronomeInit.cssClassNames.volWidgetOuter + "'><div id='" + _props.domIDs.volWidget + "'></div><div class='" + _KDMetronomeInit.cssClassNames.widgetTextLabel + "'>vol</div></div>"
+                    })()
+
+                })()
+
+                _private.generateAPI()
+                _private.readyCheck()
+            },
+
         }
-
-        const load = (_ => {
-
-            const createDomElements = (_ => {
-
-                const createOuterContainer = (_ => {
-                    const div = document.createElement("div");
-                    div.id = _props.domIDs.container
-                    document.body.appendChild(div)
-                })()
-
-                const createInnerContainer = (_ => {
-                    const container = document.getElementById(_props.domIDs.container)
-                    container.classList.add(_KDMetronomeInit.cssClassNames.outerContainer)
-                    container.innerHTML = "<div id='" + _props.domIDs.inner + "'></div>"
-                })()
-
-                const createUIElements = (_ => {
-                    const inner = document.getElementById(_props.domIDs.inner)
-                    inner.classList.add(_KDMetronomeInit.cssClassNames.innerContainer)
-                    inner.innerHTML =
-                        "<button id='" + _props.domIDs.startButton + "' class='" + _KDMetronomeInit.cssClassNames.startButton + "' type='button'>off</button>" +
-                        "<div class='" + _KDMetronomeInit.cssClassNames.bpmWidgetOuter + "'><div id='" + _props.domIDs.bpmWidget + "'></div><div class='" + _KDMetronomeInit.cssClassNames.widgetTextLabel + "'>bpm</div></div>" +
-                        "<div class='" + _KDMetronomeInit.cssClassNames.volWidgetOuter + "'><div id='" + _props.domIDs.volWidget + "'></div><div class='" + _KDMetronomeInit.cssClassNames.widgetTextLabel + "'>vol</div></div>"
-                })()
-
-            })()
-
-            if (typeof toggleID === 'object') this.setOptions(toggleID)
-
-            _private.generateAPI()
-            _private.readyCheck()
-        })()
+        _private.load()
 
     }
 

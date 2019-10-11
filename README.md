@@ -29,8 +29,9 @@ const metronome2 = new KDMetronome({
     headless: true,
     bpm: 180,
     frequency: 400,
-    volume: 80,
+    volume: 60,
 })
+metronome2.ready(_ => metronome2.callback(_ => console.log(metronome2.ticks())))
 document.getElementById('toggle').addEventListener("click", e => metronome2.running() ? metronome2.stop() : metronome2.start())
 
 // metronome.ready()                                    // Returns true/false.
