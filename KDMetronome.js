@@ -242,6 +242,7 @@ class KDMetronome {
 
             defaults: {
                 volume: 50,
+                volumeScale: 1.8,
                 bpm: 72,
                 frequency: 600,
             },
@@ -253,6 +254,7 @@ class KDMetronome {
             volume: _props.defaults.volume,
             frequency: _props.defaults.frequency,
             headless: false,
+            ticks: 0,
         }
 
         // PRIVATE PROPERTIES
@@ -269,7 +271,7 @@ class KDMetronome {
             volumeWidget: null,
         }
 
-        // PUBLIC METHODS
+        // PUBLIC METHODS (see API for actual public accessors)
 
         let _callback = _ => _defaultCallback()
 
@@ -296,11 +298,13 @@ class KDMetronome {
                 startButton.classList.add('noTransition') // make sure visual metronome ticks arent affected by animation transition durations
             }
 
-            const seconds = 60 / _state.bpm
-            _controllers.event = _controllers.clock.callbackAtTime(_ => _callback(), seconds).repeat(seconds)
+            const onTick = _ => {
+                _state.ticks++
+                _callback()
+            }
 
-            _views.synth.volume.value = Tone.gainToDb(_state.volume / 100)
-            _callback()
+            const seconds = 60 / _state.bpm
+            _controllers.event = _controllers.clock.callbackAtTime(_ => onTick(), seconds).repeat(seconds)
         }
 
         const _stop = _ => {
@@ -310,7 +314,7 @@ class KDMetronome {
             _controllers.event = null
             _controllers.clock = null
             _controllers.context = null
-
+            _state.ticks = 0
 
             const startButton = document.getElementById(_props.domIDs.startButton)
             if (startButton) {
@@ -349,7 +353,12 @@ class KDMetronome {
         }
 
         const _volume = volume => {
-            if (volume) _state.volume = volume
+            if (volume) {
+                if (_state.volume != volume) {
+                    _state.volume = volume
+                    _views.synth.volume.value = Tone.gainToDb((_state.volume * _props.defaults.volumeScale) / 100)
+                }
+            }
             return _state.volume
         }
 
@@ -373,6 +382,10 @@ class KDMetronome {
             }
             return _state.headless
         }
+
+        const _triggerSynth = _ => _views.synth.triggerAttackRelease(_state.frequency, '8n')
+
+        const _ticks = _ => _state.ticks
 
         const _getState = _ => _state
 
@@ -419,7 +432,7 @@ class KDMetronome {
                     const inner = document.getElementById(_props.domIDs.inner)
                     inner.classList.add(_KDMetronomeInit.cssClassNames.innerContainer)
                     inner.innerHTML =
-                        "<button id='" + _props.domIDs.startButton + "' class='" + _KDMetronomeInit.cssClassNames.startButton + "' type='button'>off</button>" +
+                        "<button id='" + _props.domIDs.startButton + "' class='" + _KDMetronomeInit.cssClassNames.startButton + "' type='button' style='opacity: 1;'>off</button>" +
                         "<div class='" + _KDMetronomeInit.cssClassNames.bpmWidgetOuter + "'><div id='" + _props.domIDs.bpmWidget + "'></div><div class='" + _KDMetronomeInit.cssClassNames.widgetTextLabel + "'>bpm</div></div>" +
                         "<div class='" + _KDMetronomeInit.cssClassNames.volWidgetOuter + "'><div id='" + _props.domIDs.volWidget + "'></div><div class='" + _KDMetronomeInit.cssClassNames.widgetTextLabel + "'>vol</div></div>"
                 })()
@@ -431,11 +444,14 @@ class KDMetronome {
             _readyCheck()
         })()
 
-        const _defaultCallback = _ => {
-            _views.synth.triggerAttackRelease(_state.frequency, '8n')
-
+        const _startButtonVisualFeedback = _ => {
             const startButton = document.getElementById(_props.domIDs.startButton)
             if (startButton) startButton.style.opacity < 1 ? startButton.style.opacity = 1 : startButton.style.opacity = 0.7
+        }
+
+        const _defaultCallback = _ => {
+            _triggerSynth()
+            _startButtonVisualFeedback()
         }
 
         const _setCallback = callback => {
@@ -462,7 +478,7 @@ class KDMetronome {
                     },
                 }).toDestination()
 
-                _views.synth.volume.value = Tone.gainToDb(_state.volume / 100)
+                _views.synth.volume.value = Tone.gainToDb((_state.volume * _props.defaults.volumeScale) / 100)
             })()
 
             const createBpmWidget = (_ => {
@@ -477,9 +493,7 @@ class KDMetronome {
                         'step': 1
                     })
 
-                    _views.bpmWidget.on('change', value => {
-                        this.bpm(value)
-                    })
+                    _views.bpmWidget.on('change', value => _bpm(value))
 
                     // /* center text, update font */
                     Object.values(document.getElementById(_props.domIDs.bpmWidget).children).forEach(child => {
@@ -503,10 +517,7 @@ class KDMetronome {
                         'step': 1
                     })
 
-                    _views.volumeWidget.on('change', value => {
-                        _views.synth.volume.value = Tone.gainToDb(value / 100)
-                        _state.volume = value
-                    })
+                    _views.volumeWidget.on('change', value => _volume(value))
 
                     // /* center text, update font */
                     Object.values(document.getElementById(_props.domIDs.volWidget).children).forEach(child => {
@@ -544,6 +555,8 @@ class KDMetronome {
         this.volume = volume => _volume(volume)
         this.frequency = hz => _frequency(hz)
         this.hidden = _ => _hidden()
+        this.triggerSynth = _ => _triggerSynth()
+        this.ticks = _ => _ticks()
         this.headless = headless => _headless(headless)
         this.state = _ => _getState()
         this.props = _ => _getProps()

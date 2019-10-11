@@ -47,10 +47,12 @@ document.getElementById('toggle').addEventListener("click", e => metronome2.runn
 // metronome.volume()                                   // Returns the current volume.
 // metronome.hide()                                     // Hide the UI widget. Only when not in headless mode.
 // metronome.show()                                     // Show the UI widget. Only when not in headless mode.
+// metronome.triggerSynth()                             // Manually triggers a synth click. Useful when adding custom callbacks.
 
 // metronome.hidden()                                   // Returns true/false. Read-only.
 // metronome.running()                                  // Returns true/false. Read-only.
 // metronome.headless()                                 // Returns true/false. Read-only.
+// metronome.ticks()                                    // Returns the tick count. Resets when metronome is stopped. Read-only.
 // metronome.state()                                    // Returns an object containing instance state values.  Read-only.
 // metronome.props()                                    // Returns an object containing instance properties.  Read-only.
 // metronome.controllers()                              // Returns an object containing instance controllers.  Read-only.
