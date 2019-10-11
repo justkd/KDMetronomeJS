@@ -239,7 +239,7 @@ class KDMetronome {
                 bpm: 72,
                 frequency: 600,
                 callback: _ => {
-                    _public.triggerSynth()
+                    this.triggerSynth()
                     _private.startButtonVisualFeedback()
                 },
             },
@@ -257,6 +257,7 @@ class KDMetronome {
         }
 
         const _state = {
+            ready: false,
             bpm: bpm ? bpm : _props.defaults.bpm,
             volume: _props.defaults.volume,
             frequency: _props.defaults.frequency,
@@ -278,9 +279,9 @@ class KDMetronome {
             volumeWidget: null,
         }
 
-        // PUBLIC METHODS (see API for actual public accessors)
+        // PUBLIC METHODS
 
-        const _public = {
+        let _public = {
 
             callback: callback => {
                 if (typeof callback === 'function') {
@@ -291,7 +292,7 @@ class KDMetronome {
             },
 
             setOptions: options => {
-                if (options.headless) _public.headless(options.headless)
+                if (options.headless) this.headless(options.headless)
                 if (options.toggleID) _props.domIDs.toggle = options.toggleID
                 if (options.bpm) _state.bpm = options.bpm
                 if (options.volume) _state.volume = options.volume
@@ -299,7 +300,7 @@ class KDMetronome {
             },
 
             start: _ => {
-                if (_controllers.event) _public.stop()
+                if (_controllers.event) this.stop()
 
                 _controllers.context = window.webkitAudioContext ? new webkitAudioContext() : new AudioContext()
 
@@ -361,7 +362,7 @@ class KDMetronome {
 
             bpm: bpm => {
                 if (bpm) {
-                    if (_public.running()) _public.stop()
+                    if (this.running()) this.stop()
                     _state.bpm = bpm
                 }
                 return _state.bpm
@@ -384,7 +385,7 @@ class KDMetronome {
 
             hidden: _ => {
                 const elem = document.getElementById(_props.domIDs.container)
-                let hidden = _public.headless() ? 'N/A headless mode' : 'undefined'
+                let hidden = this.headless() ? 'N/A headless mode' : 'undefined'
                 if (elem) elem.style.display == 'none' ? hidden = true : hidden = false
                 return hidden
             },
@@ -410,6 +411,25 @@ class KDMetronome {
 
             controllers: _ => _controllers,
 
+            ready: callback => {
+                if (typeof callback === 'function') {
+                    if (_state.ready) {
+                        callback()
+                    } else {
+                        let timeoutCounter = 0
+                        setTimeout(_ => {
+                            if (timeoutCounter < 2000) {
+                                timeoutCounter++
+                                this.ready(callback)
+                            } else {
+                                console.log('unable to create metronome')
+                            }
+                        }, 100)
+                    }
+                }
+                return _state.ready
+            },
+
         }
 
         // PRIVATE METHODS
@@ -419,9 +439,10 @@ class KDMetronome {
             readyCheck: _ => {
                 if (_KDMetronomeInit.state.ready) {
                     _private.createMetronome()
+                    _state.ready = true
                 } else {
                     let timeoutCounter = 0
-                    setTimeout(() => {
+                    setTimeout(_ => {
                         if (timeoutCounter < 2000) {
                             timeoutCounter++
                             _private.readyCheck()
@@ -468,7 +489,7 @@ class KDMetronome {
                             'step': 1
                         })
 
-                        _views.bpmWidget.on('change', value => _public.bpm(value))
+                        _views.bpmWidget.on('change', value => this.bpm(value))
 
                         // /* center text, update font */
                         Object.values(document.getElementById(_props.domIDs.bpmWidget).children).forEach(child => {
@@ -492,7 +513,7 @@ class KDMetronome {
                             'step': 1
                         })
 
-                        _views.volumeWidget.on('change', value => _public.volume(value))
+                        _views.volumeWidget.on('change', value => this.volume(value))
 
                         // /* center text, update font */
                         Object.values(document.getElementById(_props.domIDs.volWidget).children).forEach(child => {
@@ -508,13 +529,18 @@ class KDMetronome {
                     document.getElementById(_props.domIDs.container).style.display = 'none' // prepare container for this.hidden() check
                     document.getElementById(_props.domIDs.startButton).style.opacity = 1 // prepare start button for opacity check
                     /* Bind show/hide to the provided toggle element if available. */
-                    if (_props.domIDs.toggle) document.getElementById(_props.domIDs.toggle).addEventListener("click", e => _public.hidden() ? _public.show() : _public.hide())
+                    if (_props.domIDs.toggle) document.getElementById(_props.domIDs.toggle).addEventListener("click", e => this.hidden() ? this.show() : this.hide())
                     /* Bind start button action */
-                    document.getElementById(_props.domIDs.startButton).addEventListener("click", e => _controllers.event ? _public.stop() : _public.start())
+                    document.getElementById(_props.domIDs.startButton).addEventListener("click", e => _controllers.event ? this.stop() : this.start())
                     /* make the container draggable */
                     _utility.makeDraggable(document.getElementById(_props.domIDs.container))
                 }
 
+            },
+
+            generateAPI: _ => {
+                Object.keys(_public).forEach(method => this[method] = _public[method])
+                _public = null
             },
 
         }
@@ -546,32 +572,11 @@ class KDMetronome {
 
             })()
 
-            if (typeof toggleID === 'object') _public.setOptions(toggleID)
+            if (typeof toggleID === 'object') this.setOptions(toggleID)
 
+            _private.generateAPI()
             _private.readyCheck()
         })()
-
-        // API
-
-        this.callback = callback => _public.callback(callback)
-        this.setOptions = options => _public.setOptions(options)
-        this.start = _ => _public.start()
-        this.stop = _ => _public.stop()
-        this.hide = _ => _public.hide()
-        this.show = _ => _public.show()
-        this.running = _ => _public.running()
-        this.bpm = bpm => _public.bpm(bpm)
-        this.volume = volume => _public.volume(volume)
-        this.frequency = hz => _public.frequency(hz)
-        this.hidden = _ => _public.hidden()
-        this.triggerSynth = _ => _public.triggerSynth()
-        this.ticks = _ => _public.ticks()
-        this.headless = headless => _public.headless(headless)
-        this.state = _ => _public.state()
-        this.props = _ => _public.props()
-        this.controllers = _ => _public.controllers()
-        this.views = _ => _public.views()
-        this.uuid = _ => _props.uuid
 
     }
 

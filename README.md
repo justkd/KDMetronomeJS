@@ -33,6 +33,9 @@ const metronome2 = new KDMetronome({
 })
 document.getElementById('toggle').addEventListener("click", e => metronome2.running() ? metronome2.stop() : metronome2.start())
 
+// metronome.ready()                                    // Returns true/false.
+// metronome.ready(_ => console.log('ready'))           // Ensure dependencies are loaded and the instance is initialized.
+        
 // metronome.bpm(96)                                    // Set the BPM (6 - 300)
 // metronome.frequency(240)                             // Set the click frequency (20 - 20500)
 // metronome.volume(60)                                 // Set the click volume (0 - 100)
