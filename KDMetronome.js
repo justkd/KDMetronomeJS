@@ -57,7 +57,7 @@ const _KDMetronomeInit = {
             if (!_KDMetronomeInit.state.ready) _KDMetronomeInit.state.ready = true
         else {
             let timeoutCounter = 0
-            setTimeout(() => {
+            setTimeout(_ => {
                 if (timeoutCounter < 2000) {
                     timeoutCounter++
                     _KDMetronomeInit.readyCheck()
@@ -374,9 +374,7 @@ class KDMetronome {
 
             hidden: _ => {
                 const elem = document.getElementById(_props.domIDs.container)
-                let hidden = this.headless() ? 'N/A headless mode' : 'undefined'
-                if (elem) elem.style.display == 'none' ? hidden = true : hidden = false
-                return hidden
+                return elem ? (elem.style.display == 'none' ? true : false) : null
             },
 
             headless: headless => {
@@ -409,9 +407,7 @@ class KDMetronome {
                             if (timeoutCounter < 2000) {
                                 timeoutCounter++
                                 this.ready(callback)
-                            } else {
-                                console.log('Unable to create metronome.')
-                            }
+                            } else console.log('Unable to create metronome.')
                         }, 100)
                     }
                 }
@@ -434,9 +430,7 @@ class KDMetronome {
                         if (timeoutCounter < 2000) {
                             timeoutCounter++
                             _private.readyCheck()
-                        } else {
-                            console.log('Unable to create metronome.')
-                        }
+                        } else console.log('Unable to create metronome.')
                     }, 100)
                 }
             },
