@@ -21,7 +21,7 @@ You can pass a DOM ID to set the interactive element that will show/hide the def
 
 The default widget is draggable, can run while hidden, and the number inputs can be changed by clicking/typing or dragging up/down. You can also set a custom callback.
 
-Multple metronomes can be created and controlled independently.
+Multiple metronomes can be created and controlled independently.
 
 ```
 // Headless mode disposes of the default UI. Make sure your sound is on!
