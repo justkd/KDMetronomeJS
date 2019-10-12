@@ -11,6 +11,32 @@ const metronome = new KDMetronome('toggleID')
 ```
 
 <img src="https://raw.githubusercontent.com/justKD/KDMetronomeJS/master/readme-screenshot.png" alt="drawing" width="350"/>
+<style>
+    #toggle {
+        border: none;
+        height: 80px;
+        width: 80px;
+        margin: 10px;
+        font-size: 1em;
+        color: #fff;
+        background-color: #000;
+        box-shadow: 0 2px 7px 0 rgba(0, 0, 0, .5);
+        border-radius: 10px;
+        outline: none;
+    }
+
+    #toggle:active {
+        margin: 12px;
+        width: 76px;
+        height: 76px;
+    }
+</style>
+<br>
+<button id='toggle'>toggle</button>
+<script src='https://cdn.notnatural.co/KDMetronome.min.js' type='text/javascript'></script>
+<script>
+    const metronome = new KDMetronome('toggle') 
+</script>
 
 Example:  
 [KDMetronome on CodePen](https://codepen.io/justKD/pen/MWWYQBr)
