@@ -64,4 +64,9 @@ document.getElementById('toggle').addEventListener("click", e => metronome2.runn
 // metronome.uuid()                                     // Returns the instance's unique identifier. Read-only.
 ```
 
+KDMetronome creates the widget at the end of the body element by default. Pass in a second DOM identifier to create the widget relative to a different parent.
+```
+// const metronome = new KDMetronome('toggleID', 'parentID')
+```
+
 Tested in Chrome, Safari, and FireFox. Made with ToneJS, NexusUI, WAAClock, and AnimateCSS. Dependencies are loaded dynamically.

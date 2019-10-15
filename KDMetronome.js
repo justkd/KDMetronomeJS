@@ -112,7 +112,7 @@ Object.freeze(_KDMetronomeInit)
 _KDMetronomeInit.init()
 
 class KDMetronome {
-    constructor(toggleID) {
+    constructor(toggleID, parentID) {
 
         // UTILITY
 
@@ -251,6 +251,7 @@ class KDMetronome {
         }
 
         _props.domIDs = {
+            parentContainer: parentID ? parentID : 'kdmetronome--body',
             toggle: typeof toggleID === 'object' ? null : toggleID,
             container: 'kdmetronome--outer-' + _props.uuid, // outer metronome container div that will be animated on and off screen
             inner: 'kdmetronome--inner-' + _props.uuid, // inner container that will actually hold UI elements
@@ -541,8 +542,9 @@ class KDMetronome {
 
                     const createOuterContainer = (_ => {
                         const div = document.createElement("div");
+                        const parent = _props.domIDs.parentContainer === 'kdmetronome--body' ? document.body : document.getElementById(_props.domIDs.parentContainer)
                         div.id = _props.domIDs.container
-                        document.body.appendChild(div)
+                        parent.appendChild(div)
                     })()
 
                     const createInnerContainer = (_ => {
