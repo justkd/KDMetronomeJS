@@ -2,8 +2,8 @@
  Simple-to-use metronome widget.
 
 ## Install
-CDN served via Cloudflare:  
-https://cdn.notnatural.co/KDMetronome.min.js
+via CDN:
+https://cdn.jsdelivr.net/gh/justKD/KDMetronomeJS/KDMetronome.min.js
 
 ## Use
 ```
