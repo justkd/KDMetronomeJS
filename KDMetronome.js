@@ -1,15 +1,17 @@
-/**
- * Loads and checks for dependencies before reporting ready. Creates default CSS in a <style> tag.
- * 
- * 
+/** 
+ * Loads and checks for dependencies before reporting ready. Creates default CSS in a <style> tag. This is created and run on script load.
+ * New instances of the KDMetronome class will each check for these dependencies.
+ * If ToneJS, NexusUI, and AnimateCSS are already being loaded independently, pass `true` to `_KDMetronomeInit.init()` to skip.
  */
 const _KDMetronomeInit = {
+    /** CDN URLs for external dependencies. */
     cdn: {
         tonejs: 'https://cdnjs.cloudflare.com/ajax/libs/tone/14.3.32/Tone.js',
         nexusui: 'https://cdn.jsdelivr.net/npm/nexusui@2.0.10/dist/NexusUI.min.js',
         animate: 'https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.2/animate.min.css',
     },
 
+    /** Tag names  */
     scriptTags: {
         tone: 'kdmetronome--tonejs--script',
         nexus: 'kdmetronome--nexusui--script',
@@ -17,6 +19,7 @@ const _KDMetronomeInit = {
         style: 'kdmetronome--styles',
     },
 
+    /** CSS class names for the KDMetronome UI widget. */
     cssClassNames: {
         outerContainer: 'kdmetronome--outer-container',
         innerContainer: 'kdmetronome--inner-container',
@@ -26,12 +29,14 @@ const _KDMetronomeInit = {
         widgetTextLabel: 'kdmetronome--widget-text-label',
     },
 
+    /** KDMetronome checks this before attempting to create components that require these dependencies. */
     state: {
         toneLoaded: false,
         nexusLoaded: false,
         ready: false,
     },
 
+    /** Parse default styles and add them to the document header in a <style> tag. */
     createCSS: _ => {
 
         const styles = {
@@ -129,6 +134,7 @@ const _KDMetronomeInit = {
             },
         }
 
+        // Parse styles into string format.
         const createStyleString = styles => {
             let string = ' {'
             const keys = Object.keys(styles)
@@ -137,6 +143,7 @@ const _KDMetronomeInit = {
             return string
         }
 
+        // Complete strings for each CSS class.
         const cssClasses = {
             outerContainer: ' .' + _KDMetronomeInit.cssClassNames.outerContainer + createStyleString(styles.outerContainer),
             innerContainer: ' .' + _KDMetronomeInit.cssClassNames.innerContainer + createStyleString(styles.innerContainer),
@@ -150,6 +157,7 @@ const _KDMetronomeInit = {
         let css = ''
         Object.values(cssClasses).forEach(style => css += style)
 
+        // Add the <style> tag and classes to the document header.
         const addStyles = _ => {
             const style = document.createElement('style')
             style.id = _KDMetronomeInit.scriptTags.style
@@ -160,6 +168,7 @@ const _KDMetronomeInit = {
         if (!document.getElementById(_KDMetronomeInit.scriptTags.style)) addStyles()
     },
 
+    /** Check if dependencies are loaded. Loop for 2 seconds or until dependencies are available. */
     readyCheck: _ => {
         if (_KDMetronomeInit.state.toneLoaded && _KDMetronomeInit.state.nexusLoaded)
             if (!_KDMetronomeInit.state.ready) _KDMetronomeInit.state.ready = true
@@ -174,16 +183,19 @@ const _KDMetronomeInit = {
         }
     },
 
+    /** Check if ToneJS is loaded and available. */
     checkTone: _ => {
         if (typeof Tone != 'undefined') _KDMetronomeInit.state.toneLoaded = true
         _KDMetronomeInit.readyCheck()
     },
 
+    /** Check if NexusUI is loaded and available. */
     checkNexus: _ => {
         if (typeof Nexus != 'undefined') _KDMetronomeInit.state.nexusLoaded = true
         _KDMetronomeInit.readyCheck()
     },
 
+    /** Create a <script> tag for ToneJS. */
     loadToneJS: _ => {
         const script = document.createElement('script')
         script.id = _KDMetronomeInit.scriptTags.tone
@@ -192,6 +204,7 @@ const _KDMetronomeInit = {
         document.body.appendChild(script)
     },
 
+    /** Create a <script> tag for NexusUI. */
     loadNexusUI: _ => {
         const script = document.createElement('script')
         script.id = _KDMetronomeInit.scriptTags.nexus
@@ -200,6 +213,7 @@ const _KDMetronomeInit = {
         document.body.appendChild(script)
     },
 
+    /** Create a <link> tag for AnimateCSS. */
     loadAnimateCSS: _ => {
         const link = document.createElement('link')
         link.id = _KDMetronomeInit.scriptTags.animate
@@ -208,6 +222,7 @@ const _KDMetronomeInit = {
         document.head.appendChild(link)
     },
 
+    /** Run to create/load KDMetronome dependencies. */
     init: skipDependencies => {
         _KDMetronomeInit.createCSS()
         if (!skipDependencies) {
@@ -219,9 +234,16 @@ const _KDMetronomeInit = {
 
 }
 Object.freeze(_KDMetronomeInit)
-_KDMetronomeInit.init()
+_KDMetronomeInit.init(false)
 
+/** Handles creating UI elements for the widget and handles all KDMetronome functionality. */
 class KDMetronome {
+
+    /**
+     * Create a KDMetronome.
+     * @param {string=} toggleID - The DOM identifier for the element that should toggle showing/hiding the default UI widget.
+     * @param {string=} parentID - The DOM identifier for the element that should contain the default UI widget.
+     */
     constructor(toggleID, parentID) {
 
         // UTILITY
@@ -318,8 +340,24 @@ class KDMetronome {
 
         // PUBLIC PROPERTIES
 
+        const checkIDForHashtag = identifier => {
+            let id = identifier
+            if (typeof id === 'string') {
+                const components = toggleID.split('#')
+                if (components[0] == '#') components.shift()
+
+                id = components.join('')
+            }
+            return id
+        }
+
         const _props = {
             uuid: _utility.createUUID(),
+
+            params: {
+                toggleID: checkIDForHashtag(toggleID),
+                parentID: checkIDForHashtag(parentID),
+            },
 
             domIDs: {},
 
@@ -361,8 +399,8 @@ class KDMetronome {
         }
 
         _props.domIDs = {
-            parentContainer: parentID ? parentID : 'kdmetronome--body',
-            toggle: typeof toggleID === 'object' ? null : toggleID,
+            parentContainer: _props.params.parentID ? _props.params.parentID : 'kdmetronome--body',
+            toggle: typeof _props.params.toggleID === 'object' ? null : _props.params.toggleID,
             container: 'kdmetronome--outer-' + _props.uuid, // outer metronome container div that will be animated on and off screen
             inner: 'kdmetronome--inner-' + _props.uuid, // inner container that will actually hold UI elements
             startButton: 'kdmetronome--startbutton-' + _props.uuid,
@@ -403,7 +441,8 @@ class KDMetronome {
             },
 
             setOptions: options => {
-                if (options.toggleID) _props.domIDs.toggle = options.toggleID
+                if (options.toggleID) _props.domIDs.toggle = checkIDForHashtag(options.toggleID)
+                if (options.parentID) _props.domIDs.parentContainer = checkIDForHashtag(options.parentID)
                 if (options.headless) this.headless(options.headless)
                 if (options.bpm) this.bpm(options.bpm)
                 if (options.volume) this.volume(options.volume)
@@ -626,7 +665,7 @@ class KDMetronome {
                     }
                 })()
 
-                if (typeof toggleID === 'object') this.setOptions(toggleID)
+                if (typeof _props.params.toggleID === 'object') this.setOptions(_props.params.toggleID)
 
                 if (document.getElementById(_props.domIDs.container)) {
                     document.getElementById(_props.domIDs.container).style.display = 'none' // prepare container for this.hidden() check
