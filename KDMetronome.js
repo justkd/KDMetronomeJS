@@ -1,3 +1,8 @@
+/**
+ * Loads and checks for dependencies before reporting ready. Creates default CSS in a <style> tag.
+ * 
+ * 
+ */
 const _KDMetronomeInit = {
     cdn: {
         tonejs: 'https://cdnjs.cloudflare.com/ajax/libs/tone/14.3.32/Tone.js',
@@ -29,14 +34,117 @@ const _KDMetronomeInit = {
 
     createCSS: _ => {
 
+        const styles = {
+            outerContainer: {
+                opacity: 1,
+                position: 'fixed',
+                display: 'none',
+                left: '80px',
+                bottom: '80px',
+                'flex-wrap': 'wrap',
+                'justify-content': 'center',
+                'align-items': 'center',
+                'align-content': 'center',
+            },
+            innerContainer: {
+                padding: '20px',
+                display: 'flex',
+                'background-color': '#ffffff',
+                'flex-wrap': 'no-wrap',
+                'justify-content': 'center',
+                'align-items': 'center',
+                'align-content': 'center',
+                'border-radius': '3px',
+                'box-shadow': '0 2px 7px 0 rgba(0, 0, 0, .5)',
+                '-webkit-touch-callout': 'none',
+                '-webkit-user-select': 'none',
+                '-khtml-user-select': 'none',
+                '-moz-user-select': 'none',
+                '-ms-user-select': 'none',
+                'user-select': 'none',
+            },
+            startButton: {
+                display: 'inline-block',
+                border: 'none',
+                padding: '.375rem .75rem',
+                height: '54px',
+                width: '60px',
+                opacity: '1',
+                color: '#ffffff',
+                cursor: 'pointer',
+                outline: 'none !important',
+                overflow: 'visible',
+                'font-weight': '400',
+                'font-size': '1rem',
+                'line-height': '1.5',
+                'margin-right': '30px',
+                'border-radius': '.25rem',
+                'background-color': 'rgb(38, 38, 38)',
+                'text-align': 'center',
+                'vertical-align': 'middle',
+                '-webkit-touch-callout': 'none',
+                '-webkit-user-select': 'none',
+                '-khtml-user-select': 'none',
+                '-moz-user-select': 'none',
+                '-ms-user-select': 'none',
+                'user-select': 'none',
+                'text-transform': 'none',
+                '-webkit-appearance': 'button',
+                transition: 'color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out',
+            },
+            bpmWidgetOuter: {
+                overflow: 'hidden',
+                'margin-right': '30px',
+                'border-radius': '3px',
+                '-webkit-touch-callout': 'none',
+                '-webkit-user-select': 'none',
+                '-khtml-user-select': 'none',
+                '-moz-user-select': 'none',
+                '-ms-user-select': 'none',
+                'user-select': 'none',
+            },
+            volWidgetOuter: {
+                overflow: 'hidden',
+                'border-radius': '3px',
+                '-webkit-touch-callout': 'none',
+                '-webkit-user-select': 'none',
+                '-khtml-user-select': 'none',
+                '-moz-user-select': 'none',
+                '-ms-user-select': 'none',
+                'user-select': 'none',
+            },
+            widgetTextLabel: {
+                color: '#ffffff',
+                'line-height': '1.5',
+                'text-align': 'center',
+                'background-color': '#262626',
+            },
+            noTransition: {
+                '-webkit-transition': '0s -webkit-filter linear',
+                '-moz-transition': '0s -moz-filter linear',
+                '-moz-transition': '0s filter linear',
+                '-ms-transition': '0s -ms-filter linear',
+                '-o-transition': '0s -o-filter linear',
+                'transition': '0s filter linear, 0s -webkit-filter linear',
+            },
+        }
+
+        const createStyleString = styles => {
+            let string = ' {'
+            const keys = Object.keys(styles)
+            keys.forEach(key => string += key + ': ' + styles[key] + ';')
+            string += '}'
+            return string
+        }
+
         const cssClasses = {
-            outerContainer: ' .' + _KDMetronomeInit.cssClassNames.outerContainer + ' { opacity: 1; position: fixed; display: none; left: 80px; bottom: 80px; flex-wrap: wrap; justify-content: center; align-items: center; align-content: center;}',
-            innerContainer: ' .' + _KDMetronomeInit.cssClassNames.innerContainer + '{ background-color: #ffffff; padding: 20px; display: flex; flex-wrap: no-wrap; justify-content: center; align-items: center; align-content: center; border-radius: 3px; box-shadow: 0 2px 7px 0 rgba(0, 0, 0, .5); -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;}',
-            startButton: ' .' + _KDMetronomeInit.cssClassNames.startButton + '{ display: inline-block; height: 54px; width: 60px ;background-color: rgb(38, 38, 38); color: #ffffff; cursor: pointer; margin-right: 30px; opacity: 1; font-weight: 400; text-align: center; vertical-align: middle; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; -khtml-user-select: none; border: none; padding: .375rem .75rem; font-size: 1rem; line-height: 1.5; border-radius: .25rem; transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out; outline: none !important; text-transform: none; overflow: visible; -webkit-appearance: button;}',
-            bpmWidgetOuter: ' .' + _KDMetronomeInit.cssClassNames.bpmWidgetOuter + '{ -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; margin-right: 30px; border-radius: 3px; overflow: hidden;}',
-            volWidgetOuter: ' .' + _KDMetronomeInit.cssClassNames.volWidgetOuter + '{ -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; border-radius: 3px; overflow: hidden;}',
-            widgetTextLabel: ' .' + _KDMetronomeInit.cssClassNames.widgetTextLabel + '{ text-align: center; background-color: #262626; color: #ffffff; line-height: 1.5;}',
-            noTransition: '.no-transition { -webkit-transition: 0s -webkit-filter linear; -moz-transition: 0s -moz-filter linear; -moz-transition: 0s filter linear; -ms-transition: 0s -ms-filter linear; -o-transition: 0s -o-filter linear; transition: 0s filter linear, 0s -webkit-filter linear;}',
+            outerContainer: ' .' + _KDMetronomeInit.cssClassNames.outerContainer + createStyleString(styles.outerContainer),
+            innerContainer: ' .' + _KDMetronomeInit.cssClassNames.innerContainer + createStyleString(styles.innerContainer),
+            startButton: ' .' + _KDMetronomeInit.cssClassNames.startButton + createStyleString(styles.startButton),
+            bpmWidgetOuter: ' .' + _KDMetronomeInit.cssClassNames.bpmWidgetOuter + createStyleString(styles.bpmWidgetOuter),
+            volWidgetOuter: ' .' + _KDMetronomeInit.cssClassNames.volWidgetOuter + createStyleString(styles.volWidgetOuter),
+            widgetTextLabel: ' .' + _KDMetronomeInit.cssClassNames.widgetTextLabel + createStyleString(styles.widgetTextLabel),
+            noTransition: '.no-transition' + createStyleString(styles.noTransition)
         }
 
         let css = ''
@@ -100,11 +208,13 @@ const _KDMetronomeInit = {
         document.head.appendChild(link)
     },
 
-    init: _ => {
+    init: skipDependencies => {
         _KDMetronomeInit.createCSS()
-        _KDMetronomeInit.loadAnimateCSS()
-        _KDMetronomeInit.loadToneJS()
-        _KDMetronomeInit.loadNexusUI()
+        if (!skipDependencies) {
+            _KDMetronomeInit.loadAnimateCSS()
+            _KDMetronomeInit.loadToneJS()
+            _KDMetronomeInit.loadNexusUI()
+        } else Object.values(_KDMetronomeInit.state).forEach(value => value = true)
     },
 
 }
